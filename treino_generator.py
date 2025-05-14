@@ -2,7 +2,7 @@ from openai import OpenAI
 import os
 
 # Instancia o cliente com a chave da variável de ambiente
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+client = OpenAI(api_key=os.environ.get("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"))
 
 def gerar_treino(dados: dict) -> list[dict]:
     prompt = f"""
