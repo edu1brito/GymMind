@@ -1,18 +1,12 @@
-import os
 import streamlit as st
 from io import BytesIO
 from treino_generator import gerar_treino
 from pdf_generator import gerar_pdf
 import openai
 
-# Configuração da OpenAI a partir da variável de ambiente
+# ✅ Configuração segura da OpenAI via secrets do Streamlit
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 openai.organization = st.secrets["OPENAI_PROJECT_ID"]
-
-if not openai_api_key:
-    st.error("API key da OpenAI não encontrada. Configure a variável de ambiente OPENAI_API_KEY em seu sistema ou no Streamlit Cloud.")
-    st.stop()
-openai.api_key = openai_api_key
 
 st.title("🤖 GymMind IA – Gerador de Treinos")
 
@@ -24,7 +18,7 @@ with st.form("form_ia"):
     nivel = st.selectbox("Nível de treino", ["Iniciante", "Intermediário", "Avançado"])
     objetivo = st.selectbox("Objetivo principal", ["Hipertrofia", "Emagrecimento", "Força", "Resistência"])
     dias_semana = st.slider("Dias disponíveis por semana", 1, 7, 3)
-    equipamentos = st.text_input("Equipamentos disponíveis (vírgula separado)", "Halteres, Banco")
+    equipamentos = st.text_input("Equipamentos disponíveis (separados por vírgula)", "Halteres, Banco")
     restricoes = st.text_area("Lesões ou restrições (se houver)", "Nenhuma")
     submitted = st.form_submit_button("Gerar PDF com IA")
 
@@ -40,13 +34,17 @@ if submitted:
         "equipamentos": equipamentos,
         "restricoes": restricoes
     }
-    treino = gerar_treino(dados)
-    pdf_bytes = gerar_pdf(nome, treino)
 
-    st.success("✅ Treino gerado pela IA com sucesso!")
-    st.download_button(
-        "📥 Baixar PDF",
-        data=pdf_bytes,
-        file_name=f"{nome}_treino.pdf",
-        mime="application/pdf"
-    )
+    try:
+        treino = gerar_treino(dados)
+        pdf_bytes = gerar_pdf(nome, treino)
+
+        st.success("✅ Treino gerado com sucesso!")
+        st.download_button(
+            "📥 Baixar PDF",
+            data=pdf_bytes,
+            file_name=f"{nome}_treino.pdf",
+            mime="application/pdf"
+        )
+    except Exception as e:
+        st.error(f"❌ Erro ao gerar o treino: {str(e)}")
