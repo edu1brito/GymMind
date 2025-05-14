@@ -1,4 +1,8 @@
-import openai
+from openai import OpenAI
+import os
+
+# Instancia o cliente com a chave da variável de ambiente
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 def gerar_treino(dados: dict) -> list[dict]:
     prompt = f"""
@@ -16,13 +20,16 @@ def gerar_treino(dados: dict) -> list[dict]:
     1. Agachamento – 4x8
     2. Supino reto – 3x10
     """
-    response = openai.ChatCompletion.create(
+
+    response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7,
     )
+
     texto = response.choices[0].message.content
     treino = []
+
     for linha in texto.split("\n"):
         linha = linha.strip()
         if not linha:
@@ -37,10 +44,14 @@ def gerar_treino(dados: dict) -> list[dict]:
             ex, sr = resto.split('-', 1)
         else:
             continue
-        series, reps = sr.strip().split('x')
-        treino.append({
-            'exercicio': ex.strip(),
-            'series': int(series),
-            'repeticoes': int(reps)
-        })
+        try:
+            series, reps = sr.strip().split('x')
+            treino.append({
+                'exercicio': ex.strip(),
+                'series': int(series),
+                'repeticoes': int(reps)
+            })
+        except:
+            continue
+
     return treino
