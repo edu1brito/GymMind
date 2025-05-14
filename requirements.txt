@@ -1,0 +1,5 @@
+streamlit
+jinja2
+fpdf2
+html5lib
+openai

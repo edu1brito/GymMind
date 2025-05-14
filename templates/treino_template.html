@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Plano de Treino de {{ nome }}</title>
+    <style>
+        h1 { text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #333; padding: 8px; text-align: center; }
+        th { background-color: #eee; }
+    </style>
+</head>
+<body>
+    <h1>Plano de Treino de {{ nome }}</h1>
+    <table>
+        <tr>
+            <th>Exercício</th>
+            <th>Séries</th>
+            <th>Repetições</th>
+        </tr>
+        {% for item in treino %}
+        <tr>
+            <td>{{ item.exercicio }}</td>
+            <td>{{ item.series }}</td>
+            <td>{{ item.repeticoes }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
