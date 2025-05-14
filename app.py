@@ -6,7 +6,9 @@ from pdf_generator import gerar_pdf
 import openai
 
 # Configuração da OpenAI a partir da variável de ambiente
-openai_api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = st.secrets["OPENAI_API_KEY"]
+openai.organization = st.secrets["OPENAI_PROJECT_ID"]
+
 if not openai_api_key:
     st.error("API key da OpenAI não encontrada. Configure a variável de ambiente OPENAI_API_KEY em seu sistema ou no Streamlit Cloud.")
     st.stop()
