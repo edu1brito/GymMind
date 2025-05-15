@@ -4,26 +4,32 @@ from treino_generator import gerar_treino
 from pdf_generator import gerar_pdf
 import openai
 from PIL import Image
+import base64
 
-# ✅ Configuração segura da OpenAI via secrets do Streamlit
+# ✅ Configuração da OpenAI
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 openai.organization = st.secrets["OPENAI_PROJECT_ID"]
 
-# ✅ Centralizar com HTML + logo
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    logo = Image.open("assets/logo.png")
-    st.image(logo, width=150)
+# ✅ Logo centralizada usando base64 embutida
+def render_logo_centered(path):
+    with open(path, "rb") as f:
+        data = f.read()
+        encoded = base64.b64encode(data).decode()
+    st.markdown(
+        f"""
+        <div style="text-align: center;">
+            <img src="data:image/png;base64,{encoded}" width="150"/>
+            <h1 style="margin-bottom: 0;">Gym Mind</h1>
+            <p style="font-size: 20px; margin-top: 0;">Gerador de Treinos</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-# ✅ Título e subtítulo centralizados com markdown
-st.markdown("""
-    <div style="text-align: center;">
-        <h1 style="margin-bottom: 0;">Gym Mind</h1>
-        <p style="font-size: 20px; margin-top: 0;">Gerador de Treinos</p>
-    </div>
-""", unsafe_allow_html=True)
+# 🔥 Renderiza logo + título
+render_logo_centered("assets/logo.png")
 
-# ✅ Formulário do usuário
+# ✅ Formulário
 with st.form("form_ia"):
     nome = st.text_input("Seu nome")
     idade = st.number_input("Idade", min_value=10, max_value=100, value=25)
@@ -36,7 +42,7 @@ with st.form("form_ia"):
     restricoes = st.text_area("Lesões ou restrições (se houver)", "Nenhuma")
     submitted = st.form_submit_button("Gerar PDF com IA")
 
-# ✅ Geração de treino
+# ✅ Processamento
 if submitted:
     dados = {
         "nome": nome,
