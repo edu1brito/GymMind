@@ -8,7 +8,10 @@ import openai
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 openai.organization = st.secrets["OPENAI_PROJECT_ID"]
 
-st.title("🤖 GymMind IA – Gerador de Treinos")
+st.title(" GymMind IA – Gerador de Treinos")
+logo = Image.open("assets/logo.png")
+st.image(logo, width=150)  # ajuste o tamanho como quiser
+
 
 with st.form("form_ia"):
     nome = st.text_input("Seu nome")
