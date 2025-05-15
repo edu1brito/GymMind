@@ -1,6 +1,6 @@
 import os
-import openai
 import json
+from openai import OpenAI
 
 # Nomes dos dias em português
 diass = [
@@ -19,24 +19,22 @@ splits = {
     7: diass
 }
 
-# Inicializa cliente OpenAI usando nova lib
-from openai import OpenAI
+# Inicializa cliente OpenAI usando nova interface sem organization/project
 client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY"),
-    project_id=os.getenv("OPENAI_PROJECT_ID")
+    api_key=os.getenv("OPENAI_API_KEY")
 )
 
 def gerar_treino(dados: dict) -> list[dict]:
     """
     Gera um plano de treino por dias.
-    Retorna [{'dia': str, 'exercicios': [...]}, ...]
+    Retorna lista de dicts: {'dia': str, 'exercicios': list[dict]}
     """
-    dias = diass[:dados["dias_semana"]]
+    dias = diass[: dados["dias_semana"]]
     split = splits.get(dados["dias_semana"], ["Full Body"])
 
     system = (
-        "Você é um personal trainer virtual. Com base nos dados do usuário, "
-        "responda somente com um JSON. Cada item deve ter 'dia' e 'exercicios' (lista com 'nome','series','repeticoes')."
+        "Você é um personal trainer virtual. Com base nos dados do usuário, crie um JSON válido dividido por dias da semana, "
+        "sem explicações extras. Cada item deve ter 'dia' (string) e 'exercicios' (lista com objetos de 'nome','series','repeticoes')."
     )
     payload = {
         "nome": dados["nome"],
@@ -58,10 +56,10 @@ def gerar_treino(dados: dict) -> list[dict]:
             {"role": "system", "content": system},
             {"role": "user", "content": json.dumps(payload, ensure_ascii=False)}
         ],
-        temperature=0.7,
+        temperature=0.7
     )
-    content = response.choices[0].message.content
+    text = response.choices[0].message.content.strip()
     try:
-        return json.loads(content)
-    except Exception:
-        raise ValueError(f"JSON inválido da IA:\n{content}")
+        return json.loads(text)
+    except json.JSONDecodeError:
+        raise ValueError(f"Resposta da IA não está em JSON válido:\n{text}")
