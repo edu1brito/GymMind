@@ -3,6 +3,7 @@ from io import BytesIO
 from treino_generator import gerar_treino
 from pdf_generator import gerar_pdf
 import openai
+from PIL import Image
 
 # ✅ Configuração segura da OpenAI via secrets do Streamlit
 openai.api_key = st.secrets["OPENAI_API_KEY"]
