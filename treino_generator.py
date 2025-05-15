@@ -1,65 +1,57 @@
-import os
-import json
 from openai import OpenAI
+import os
 
-# Nomes dos dias em português
-diass = [
-    "Segunda-feira", "Terça-feira", "Quarta-feira", 
-    "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"
-]
-
-# Splits de treino conforme dias
-splits = {
-    1: ["Full Body"],
-    2: ["Parte Superior", "Parte Inferior"],
-    3: ["Push (Peito/Ombro/Tríceps)", "Pull (Costas/Bíceps)", "Legs (Pernas/Glúteos)"],
-    4: ["Peito/Tríceps", "Costas/Bíceps", "Ombro/Abs", "Pernas"],
-    5: ["Peito", "Costas", "Pernas", "Ombro", "Braços"],
-    6: ["Segunda Full", "Terça Upper", "Quarta Lower", "Quinta Full", "Sexta Upper", "Sábado Lower"],
-    7: diass
-}
-
-# Inicializa cliente OpenAI usando nova interface sem organization/project
-client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY")
-)
+# Instancia o cliente com a chave da variável de ambiente
+client = OpenAI(api_key=os.environ.get("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"))
 
 def gerar_treino(dados: dict) -> list[dict]:
+    prompt = f"""
+    Crie um plano de treino personalizado para:
+    - Nome: {dados['nome']}
+    - Idade: {dados['idade']} anos
+    - Peso: {dados['peso_kg']} kg
+    - Altura: {dados['altura_cm']} cm
+    - Nível: {dados['nivel']}
+    - Objetivo: {dados['objetivo']}
+    - Dias por semana: {dados['dias_semana']}
+    - Equipamentos: {dados['equipamentos']}
+    - Restrições: {dados['restricoes']}
+    Formate como uma lista numerada de exercícios, cada um com número de séries e repetições. Exemplo:
+    1. Agachamento – 4x8
+    2. Supino reto – 3x10
     """
-    Gera um plano de treino por dias.
-    Retorna lista de dicts: {'dia': str, 'exercicios': list[dict]}
-    """
-    dias = diass[: dados["dias_semana"]]
-    split = splits.get(dados["dias_semana"], ["Full Body"])
-
-    system = (
-        "Você é um personal trainer virtual. Com base nos dados do usuário, crie um JSON válido dividido por dias da semana, "
-        "sem explicações extras. Cada item deve ter 'dia' (string) e 'exercicios' (lista com objetos de 'nome','series','repeticoes')."
-    )
-    payload = {
-        "nome": dados["nome"],
-        "idade": dados["idade"],
-        "peso_kg": dados["peso_kg"],
-        "altura_cm": dados["altura_cm"],
-        "nivel": dados["nivel"],
-        "objetivo": dados["objetivo"],
-        "dias_semana": dados["dias_semana"],
-        "equipamentos": dados["equipamentos"],
-        "restricoes": dados["restricoes"],
-        "split": split,
-        "dias": dias
-    }
 
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": json.dumps(payload, ensure_ascii=False)}
-        ],
-        temperature=0.7
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7,
     )
-    text = response.choices[0].message.content.strip()
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        raise ValueError(f"Resposta da IA não está em JSON válido:\n{text}")
+
+    texto = response.choices[0].message.content
+    treino = []
+
+    for linha in texto.split("\n"):
+        linha = linha.strip()
+        if not linha:
+            continue
+        partes = linha.split('.', 1)
+        if len(partes) != 2:
+            continue
+        resto = partes[1].strip()
+        if '–' in resto:
+            ex, sr = resto.split('–')
+        elif '-' in resto:
+            ex, sr = resto.split('-', 1)
+        else:
+            continue
+        try:
+            series, reps = sr.strip().split('x')
+            treino.append({
+                'exercicio': ex.strip(),
+                'series': int(series),
+                'repeticoes': int(reps)
+            })
+        except:
+            continue
+
+    return treino
