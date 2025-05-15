@@ -1,71 +1,47 @@
-import os
-import json
-import re
-from openai import OpenAI
+from fpdf import FPDF, HTMLMixin
+from fpdf.html import HTML2FPDF
+from html import unescape as html_unescape
+import io
 
-# Nomes dos dias em português
-diass = [
-    "Segunda-feira", "Terça-feira", "Quarta-feira", 
-    "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"
-]
+# Corrige erro de unescape para HTML
+HTML2FPDF.unescape = staticmethod(html_unescape)
 
-# Splits de treino conforme dias
-splits = {
-    1: ["Full Body"],
-    2: ["Parte Superior", "Parte Inferior"],
-    3: ["Push (Peito/Ombro/Tríceps)", "Pull (Costas/Bíceps)", "Legs (Pernas/Glúteos)"],
-    4: ["Peito/Tríceps", "Costas/Bíceps", "Ombro/Abs", "Pernas"],
-    5: ["Peito", "Costas", "Pernas", "Ombro", "Braços"],
-    6: ["Segunda Full", "Terça Upper", "Quarta Lower", "Quinta Full", "Sexta Upper", "Sábado Lower"],
-    7: diass
-}
+class PDF(FPDF, HTMLMixin):
+    pass
 
-# Inicializa cliente OpenAI usando nova interface sem organization/project
-client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY")
-)
+def gerar_pdf(nome: str, treino: list[dict]) -> bytes:
+    pdf = PDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.set_font("Arial", size=12)
 
-def gerar_treino(dados: dict) -> list[dict]:
-    """
-    Gera um plano de treino por dias.
-    Retorna lista de dicts: {'dia': str, 'exercicios': list[dict]}
-    """
-    dias = diass[: dados["dias_semana"]]
-    split = splits.get(dados["dias_semana"], ["Full Body"])
+    # Título
+    pdf.set_text_color(46, 134, 222)
+    pdf.set_font_size(18)
+    pdf.cell(0, 10, f"Plano de Treino de {nome}", ln=True, align="C")
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(5)
 
-    system = (
-        "Você é um personal trainer virtual. Com base nos dados do usuário, crie um JSON válido dividido por dias da semana, "
-        "sem explicações extras. Cada item deve ter 'dia' (string) e 'exercicios' (lista com objetos de 'nome','series','repeticoes')."
-    )
-    payload = {
-        "nome": dados["nome"],
-        "idade": dados["idade"],
-        "peso_kg": dados["peso_kg"],
-        "altura_cm": dados["altura_cm"],
-        "nivel": dados["nivel"],
-        "objetivo": dados["objetivo"],
-        "dias_semana": dados["dias_semana"],
-        "equipamentos": dados["equipamentos"],
-        "restricoes": dados["restricoes"],
-        "split": split,
-        "dias": dias
-    }
+    for dia in treino:
+        pdf.set_font_size(14)
+        pdf.set_text_color(44, 62, 80)
+        pdf.cell(0, 10, dia["dia"], ln=True)
+        pdf.set_text_color(0, 0, 0)
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": json.dumps(payload, ensure_ascii=False)}
-        ],
-        temperature=0.7
-    )
-    text = response.choices[0].message.content.strip()
+        pdf.set_font_size(12)
+        pdf.set_fill_color(223, 240, 255)
+        pdf.cell(90, 8, "Exercício", 1, 0, 'C', fill=True)
+        pdf.cell(30, 8, "Séries", 1, 0, 'C', fill=True)
+        pdf.cell(30, 8, "Repetições", 1, 1, 'C', fill=True)
 
-    match = re.search(r'\{.*\}', text, re.DOTALL)
-    if not match:
-        raise ValueError(f"Resposta da IA não contém JSON detectável:\n{text}")
+        for ex in dia["exercicios"]:
+            pdf.cell(90, 8, ex["nome"], 1)
+            pdf.cell(30, 8, str(ex["series"]), 1)
+            pdf.cell(30, 8, str(ex["repeticoes"]), 1)
+            pdf.ln()
 
-    try:
-        return json.loads(match.group(0))["treino"]
-    except Exception as e:
-        raise ValueError(f"Falha ao fazer parse do JSON:\n{e}\n\nConteúdo bruto:\n{text}")
+        pdf.ln(5)
+
+    buffer = io.BytesIO()
+    pdf.output(buffer)
+    return buffer.getvalue()
