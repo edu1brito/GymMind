@@ -46,7 +46,7 @@ def gerar_pdf(nome: str, treino: list[dict]) -> bytes:
     pdf.ln(6)
     pdf.set_font('Arial', 'I', 10)
     pdf.set_text_color(136, 136, 136)
-    pdf.cell(0, 10, 'Gerado por GymMind IA 💪', align='C')
+    pdf.cell(0, 10, 'Gerado por GymMind IA ', align='C')
 
     # Gera bytes do PDF
     buffer = io.BytesIO()
