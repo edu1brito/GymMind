@@ -2,29 +2,94 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Plano de Treino de {{ nome }}</title>
+    <title>Treino de {{ nome }}</title>
     <style>
-        h1 { text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #333; padding: 8px; text-align: center; }
-        th { background-color: #eee; }
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+            font-size: 12px;
+        }
+
+        .titulo {
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            color: #2e86de;
+            margin-bottom: 20px;
+        }
+
+        .subtitulo {
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #333;
+        }
+
+        .dia {
+            background-color: #f1f1f1;
+            padding: 6px 10px;
+            margin-top: 20px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            margin-bottom: 10px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 6px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #dff0ff;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 10px;
+            color: #888;
+            margin-top: 30px;
+        }
     </style>
 </head>
 <body>
-    <h1>Plano de Treino de {{ nome }}</h1>
+
+    <div class="titulo">Plano de Treino Personalizado</div>
+
+    <div class="subtitulo">Nome: <strong>{{ nome }}</strong></div>
+
+    {% for dia in treino %}
+    <div class="dia">{{ dia.dia }}</div>
     <table>
-        <tr>
-            <th>Exercício</th>
-            <th>Séries</th>
-            <th>Repetições</th>
-        </tr>
-        {% for item in treino %}
-        <tr>
-            <td>{{ item.exercicio }}</td>
-            <td>{{ item.series }}</td>
-            <td>{{ item.repeticoes }}</td>
-        </tr>
-        {% endfor %}
+        <thead>
+            <tr>
+                <th>Exercício</th>
+                <th>Séries</th>
+                <th>Repetições</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ex in dia.exercicios %}
+            <tr>
+                <td>{{ ex.nome }}</td>
+                <td>{{ ex.series }}</td>
+                <td>{{ ex.repeticoes }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
+    {% endfor %}
+
+    <div class="footer">
+        Gerado por GymMind IA 💪
+    </div>
+
 </body>
 </html>
