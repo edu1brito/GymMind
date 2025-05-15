@@ -19,11 +19,9 @@ SPLITS = {
     7: DIAS_SEMANA
 }
 
-# Inicializa cliente OpenAI com nova interface
-from openai import OpenAI
-client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY"),
-    organization=os.getenv("OPENAI_PROJECT_ID")
+# Inicializa cliente OpenAI (sem organization)
+client = openai.Client(
+    api_key=os.getenv("OPENAI_API_KEY")
 )
 
 
@@ -56,6 +54,7 @@ def gerar_treino(dados: dict) -> list[dict]:
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
+        project=os.getenv("OPENAI_PROJECT_ID"),
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False)}
