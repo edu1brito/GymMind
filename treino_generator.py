@@ -1,3 +1,4 @@
+import os
 import openai
 import json
 
@@ -18,11 +19,18 @@ SPLITS = {
     7: DIAS_SEMANA
 }
 
+# Inicializa cliente OpenAI com nova interface
+from openai import OpenAI
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY"),
+    organization=os.getenv("OPENAI_PROJECT_ID")
+)
+
 
 def gerar_treino(dados: dict) -> list[dict]:
     """
     Gera um plano de treino estruturado por dias da semana.
-    Retorna uma lista de objetos: {"dia": str, "exercicios": [{"nome", "series", "repeticoes"}, ...]}
+    Retorna lista de dicts: {'dia': str, 'exercicios': [{'nome', 'series', 'repeticoes'}, ...]}
     """
     dias = DIAS_SEMANA[: dados["dias_semana"]]
     split = SPLITS.get(dados["dias_semana"], ["Full Body"])
@@ -32,7 +40,7 @@ def gerar_treino(dados: dict) -> list[dict]:
         "Com base nos dados do usuário, crie um JSON com o plano de treino dividido em dias. "
         "Cada dia deve ter um nome (campo 'dia') e uma lista 'exercicios' com itens contendo 'nome', 'series' e 'repeticoes'."
     )
-    user_prompt = {
+    user_payload = {
         "nome": dados["nome"],
         "idade": dados["idade"],
         "peso_kg": dados["peso_kg"],
@@ -45,24 +53,19 @@ def gerar_treino(dados: dict) -> list[dict]:
         "split": split,
         "dias": dias
     }
-    prompt_content = (
-        f"Usuário: {json.dumps(user_prompt, ensure_ascii=False)}\n"
-        "Responda somente com um JSON válido, sem explicações extras."
-    )
 
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt_content}
+            {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False)}
         ],
         temperature=0.7,
     )
     text = response.choices[0].message.content.strip()
-    # Parse JSON
+
     try:
         treino = json.loads(text)
     except json.JSONDecodeError:
-        # fallback: return empty list ou raise
         raise ValueError("Resposta da IA não está em JSON válido:\n" + text)
     return treino
