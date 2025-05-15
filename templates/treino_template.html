@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Treino de {{ nome }}</title>
+    <title>Plano de Treino de {{ nome }}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -66,29 +66,29 @@
     <div class="subtitulo">Nome: <strong>{{ nome }}</strong></div>
 
     {% for dia in treino %}
-    <div class="dia">{{ dia.dia }}</div>
-    <table>
-        <thead>
-            <tr>
-                <th>Exercício</th>
-                <th>Séries</th>
-                <th>Repetições</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for ex in dia.exercicios %}
-            <tr>
-                <td>{{ ex.nome }}</td>
-                <td>{{ ex.series }}</td>
-                <td>{{ ex.repeticoes }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <div class="dia">{{ dia.dia }}</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Exercício</th>
+                    <th>Séries</th>
+                    <th>Repetições</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ex in dia.exercicios %}
+                <tr>
+                    <td>{{ ex.nome }}</td>
+                    <td>{{ ex.series }}</td>
+                    <td>{{ ex.repeticoes }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     {% endfor %}
 
     <div class="footer">
-        Gerado por GymMind IA 
+        Gerado por GymMind IA 💪
     </div>
 
 </body>
