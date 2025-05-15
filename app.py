@@ -9,11 +9,21 @@ from PIL import Image
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 openai.organization = st.secrets["OPENAI_PROJECT_ID"]
 
-st.title(" GymMind IA – Gerador de Treinos")
-logo = Image.open("assets/logo.png")
-st.image(logo, width=150)  # ajuste o tamanho como quiser
+# ✅ Centralizar com HTML + logo
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    logo = Image.open("assets/logo.png")
+    st.image(logo, width=150)
 
+# ✅ Título e subtítulo centralizados com markdown
+st.markdown("""
+    <div style="text-align: center;">
+        <h1 style="margin-bottom: 0;">Gym Mind</h1>
+        <p style="font-size: 20px; margin-top: 0;">Gerador de Treinos</p>
+    </div>
+""", unsafe_allow_html=True)
 
+# ✅ Formulário do usuário
 with st.form("form_ia"):
     nome = st.text_input("Seu nome")
     idade = st.number_input("Idade", min_value=10, max_value=100, value=25)
@@ -26,6 +36,7 @@ with st.form("form_ia"):
     restricoes = st.text_area("Lesões ou restrições (se houver)", "Nenhuma")
     submitted = st.form_submit_button("Gerar PDF com IA")
 
+# ✅ Geração de treino
 if submitted:
     dados = {
         "nome": nome,
