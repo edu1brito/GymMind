@@ -1,36 +1,35 @@
-import openai
+from openai import OpenAI
+import os
 
-client = openai.OpenAI()  # novo cliente, padrão usa API_KEY da variável de ambiente
+# Instancia o cliente com a chave da variável de ambiente
+client = OpenAI(api_key=os.environ.get("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"))
 
 def gerar_treino(dados: dict) -> list[dict]:
     prompt = f"""
-    Você é um personal trainer experiente. Com base nos dados abaixo, crie um plano de treino completo e personalizado:
-
+    Crie um plano de treino personalizado para:
     - Nome: {dados['nome']}
     - Idade: {dados['idade']} anos
     - Peso: {dados['peso_kg']} kg
     - Altura: {dados['altura_cm']} cm
     - Nível: {dados['nivel']}
     - Objetivo: {dados['objetivo']}
-    - Dias por semana disponíveis para treinar: {dados['dias_semana']}
-    - Equipamentos disponíveis: {dados['equipamentos']}
-    - Restrições físicas: {dados['restricoes']}
-
-    Instruções:
-    - Separe o plano por dias da semana (ex: Segunda - Peito e Tríceps)
-    - Liste os exercícios com séries e repetições
-    - Dê dicas personalizadas
-    - Finalize com orientações gerais (aquecimento, descanso etc.)
+    - Dias por semana: {dados['dias_semana']}
+    - Equipamentos: {dados['equipamentos']}
+    - Restrições: {dados['restricoes']}
+    Formate como uma lista numerada de exercícios, cada um com número de séries e repetições. Exemplo:
+    1. Agachamento – 4x8
+    2. Supino reto – 3x10
     """
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7,
     )
-    texto = response.choices[0].message.content
 
+    texto = response.choices[0].message.content
     treino = []
+
     for linha in texto.split("\n"):
         linha = linha.strip()
         if not linha:
@@ -45,8 +44,6 @@ def gerar_treino(dados: dict) -> list[dict]:
             ex, sr = resto.split('-', 1)
         else:
             continue
-        if 'x' not in sr:
-            continue
         try:
             series, reps = sr.strip().split('x')
             treino.append({
@@ -56,4 +53,5 @@ def gerar_treino(dados: dict) -> list[dict]:
             })
         except:
             continue
+
     return treino
