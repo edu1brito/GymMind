@@ -1,30 +1,64 @@
 import openai
 
-def gerar_plano_completo(dados: dict) -> str:
+def gerar_treino(dados: dict) -> list[dict]:
     prompt = f"""
-    Você é um personal trainer. Crie um plano de treino personalizado para o(a) aluno(a) abaixo com base nos dados:
+    Você é um personal trainer experiente. Com base nos dados abaixo, crie um plano de treino **completo e personalizado**:
+
     - Nome: {dados['nome']}
     - Idade: {dados['idade']} anos
     - Peso: {dados['peso_kg']} kg
     - Altura: {dados['altura_cm']} cm
-    - Nível de experiência: {dados['nivel']}
+    - Nível: {dados['nivel']}
     - Objetivo: {dados['objetivo']}
-    - Quantidade de dias por semana disponível para treino: {dados['dias_semana']}
+    - Dias por semana disponíveis para treinar: {dados['dias_semana']}
     - Equipamentos disponíveis: {dados['equipamentos']}
-    - Restrições físicas ou limitações: {dados['restricoes']}
+    - Restrições físicas: {dados['restricoes']}
 
-    **Instruções:**
-    - Separe os treinos por dia da semana, de acordo com os dias disponíveis.
-    - Organize cada dia com os grupos musculares focados e exercícios com número de séries e repetições.
-    - Dê um nome para cada dia (ex: "Dia 1 - Peito e Tríceps").
-    - Inclua dicas específicas com base nas restrições, nível e objetivo.
-    - Use uma formatação clara com títulos, subtítulos e marcadores.
+    **Instruções para o plano:**
+    - Separe o plano por dias da semana (ex: Segunda - Peito e Tríceps)
+    - Para cada dia, liste os exercícios com número de séries e repetições (ex: Supino reto – 4x10)
+    - Inclua dicas personalizadas com base no objetivo, nível e restrições.
+    - Finalize com uma seção de orientações gerais: aquecimento, descanso, alimentação, etc.
+    - Mantenha uma linguagem clara e empolgante, como se fosse para um aluno mesmo.
 
-    Ao final, inclua uma seção com orientações gerais (ex: aquecimento, descanso, alimentação básica).
+    **Formato de saída esperado:**
+    - Títulos para cada dia (ex: "Dia 1 - Costas e Bíceps")
+    - Lista numerada de exercícios (com séries e reps)
+    - Dicas e instruções em parágrafos curtos após os exercícios
     """
+
     response = openai.ChatCompletion.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7,
     )
-    return response.choices[0].message.content
+    texto = response.choices[0].message.content
+
+    # Ainda extrai os exercícios, como antes (pode usar isso pra montar tabela no PDF)
+    treino = []
+    for linha in texto.split("\n"):
+        linha = linha.strip()
+        if not linha:
+            continue
+        partes = linha.split('.', 1)
+        if len(partes) != 2:
+            continue
+        resto = partes[1].strip()
+        if '–' in resto:
+            ex, sr = resto.split('–')
+        elif '-' in resto:
+            ex, sr = resto.split('-', 1)
+        else:
+            continue
+        if 'x' not in sr:
+            continue
+        try:
+            series, reps = sr.strip().split('x')
+            treino.append({
+                'exercicio': ex.strip(),
+                'series': int(series),
+                'repeticoes': int(reps)
+            })
+        except:
+            continue
+    return treino
