@@ -1,8 +1,10 @@
 import openai
 
+client = openai.OpenAI()  # novo cliente, padrão usa API_KEY da variável de ambiente
+
 def gerar_treino(dados: dict) -> list[dict]:
     prompt = f"""
-    Você é um personal trainer experiente. Com base nos dados abaixo, crie um plano de treino **completo e personalizado**:
+    Você é um personal trainer experiente. Com base nos dados abaixo, crie um plano de treino completo e personalizado:
 
     - Nome: {dados['nome']}
     - Idade: {dados['idade']} anos
@@ -14,27 +16,20 @@ def gerar_treino(dados: dict) -> list[dict]:
     - Equipamentos disponíveis: {dados['equipamentos']}
     - Restrições físicas: {dados['restricoes']}
 
-    **Instruções para o plano:**
+    Instruções:
     - Separe o plano por dias da semana (ex: Segunda - Peito e Tríceps)
-    - Para cada dia, liste os exercícios com número de séries e repetições (ex: Supino reto – 4x10)
-    - Inclua dicas personalizadas com base no objetivo, nível e restrições.
-    - Finalize com uma seção de orientações gerais: aquecimento, descanso, alimentação, etc.
-    - Mantenha uma linguagem clara e empolgante, como se fosse para um aluno mesmo.
-
-    **Formato de saída esperado:**
-    - Títulos para cada dia (ex: "Dia 1 - Costas e Bíceps")
-    - Lista numerada de exercícios (com séries e reps)
-    - Dicas e instruções em parágrafos curtos após os exercícios
+    - Liste os exercícios com séries e repetições
+    - Dê dicas personalizadas
+    - Finalize com orientações gerais (aquecimento, descanso etc.)
     """
 
-    response = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
+    response = client.chat.completions.create(
+        model="gpt-4o",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7,
     )
     texto = response.choices[0].message.content
 
-    # Ainda extrai os exercícios, como antes (pode usar isso pra montar tabela no PDF)
     treino = []
     for linha in texto.split("\n"):
         linha = linha.strip()
