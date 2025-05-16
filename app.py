@@ -31,8 +31,8 @@ Você é um personal trainer experiente. Com base nos dados abaixo, elabore um p
 - Restrições ou lesões: {dados['restricoes']}
 
 Formate assim:
-1) Separe por dia da semana: ex "Segunda – Peito e Tríceps".
-2) Em cada dia, liste numerado: "Exercício – Séries x Repetições".
+1) Separe por dia da semana: ex "Segunda - Peito e Tríceps".
+2) Em cada dia, liste numerado: "Exercício - Séries x Repetições".
 3) Ao fim de cada dia, adicione dicas (postura, alimentação, descanso).
 4) Termine com orientações gerais (aquecimento, hidratação, alongamento).
 Use linguagem clara e motivacional.
@@ -50,17 +50,18 @@ Use linguagem clara e motivacional.
             continue
         parts = line.split('.', 1)
         resto = parts[1].strip() if len(parts)==2 else ''
-        if '–' in resto:
-            ex, sr = resto.split('–',1)
-        elif '-' in resto:
-            ex, sr = resto.split('-',1)
+        # substitui possíveis en-dashes e outros caracteres não ASCII
+        resto = resto.replace('–', '-').replace('—', '-')
+        if '-' in resto:
+            ex, sr = resto.split('-', 1)
         else:
             continue
-        sr = sr.replace(' ','').lower()
-        if 'x' not in sr: continue
+        sr = sr.replace(' ', '').lower()
+        if 'x' not in sr:
+            continue
         try:
             s, r = sr.split('x')
-            treino.append({'exercicio':ex.strip(),'series':int(s),'repeticoes':int(r)})
+            treino.append({'exercicio': ex.strip(), 'series': int(s), 'repeticoes': int(r)})
         except:
             continue
     return texto, treino
@@ -74,6 +75,9 @@ def gerar_pdf(nome: str, texto: str, treino: list[dict]) -> bytes:
       - tabela de exercícios
       - rodapé
     """
+    # Sanitiza texto para evitar caracteres fora do suporte do fonte
+    texto_pdf = texto.replace('–', '-').replace('—', '-')
+
     pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
     # Cabeçalho
@@ -89,7 +93,7 @@ def gerar_pdf(nome: str, texto: str, treino: list[dict]) -> bytes:
     # Texto do plano
     pdf.set_font('Arial','',11)
     pdf.set_text_color(0,0,0)
-    pdf.multi_cell(0,6,texto)
+    pdf.multi_cell(0,6, texto_pdf)
     pdf.ln(8)
     # Tabela
     pdf.set_font('Arial','B',14)
@@ -143,9 +147,17 @@ with st.form('form'):
     submit  = st.form_submit_button('Gerar PDF')
 
 if submit:
-    dados = {'nome':nome,'idade':idade,'peso_kg':peso,'altura_cm':altura,
-             'nivel':nivel,'objetivo':objetivo,'dias_semana':dias,
-             'equipamentos':equips,'restricoes':restr}
+    dados = {
+        'nome': nome,
+        'idade': idade,
+        'peso_kg': peso,
+        'altura_cm': altura,
+        'nivel': nivel,
+        'objetivo': objetivo,
+        'dias_semana': dias,
+        'equipamentos': equips,
+        'restricoes': restr
+    }
     try:
         texto_plano, lista_treino = gerar_treino(dados)
         pdf_bytes = gerar_pdf(nome, texto_plano, lista_treino)
