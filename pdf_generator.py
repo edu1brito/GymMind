@@ -23,20 +23,45 @@ def gerar_treino(dados: dict) -> tuple[str, list[dict]]:
         treino: lista de dicts com chaves 'exercicio', 'series', 'repeticoes'.
     """
     prompt = (
-        "Você é um personal trainer cientificamente embasado.\n"
-        f"{REFERENCIAS_CIENTIFICAS}\n"
-        "Baseie-se nessas diretrizes e nos dados abaixo para montar um plano completo:\n"
-        f"- Nome: {dados['nome']}\n"
-        f"- Idade: {dados['idade']} anos\n"
-        f"- Peso: {dados['peso_kg']} kg\n"
-        f"- Altura: {dados['altura_cm']} cm\n"
-        f"- Nível: {dados['nivel']}\n"
-        f"- Objetivo: {dados['objetivo']}\n"
-        f"- Dias/semana: {dados['dias_semana']}\n"
-        f"- Equipamentos: {dados['equipamentos']}\n"
-        f"- Restrições: {dados['restricoes']}\n"
-        "Formato desejado:\n"
-        "Dia da semana – Treino (ex: "Segunda – Peito e Tríceps").\n"
+        "Você é um personal trainer experiente e cientificamente embasado."
+        "
+        Não utilize nenhuma sintaxe Markdown ou asteriscos na sua resposta."
+        f"{REFERENCIAS_CIENTIFICAS}
+"
+        "Com base nessas diretrizes e nos dados abaixo, monte um plano completo e claro sem formatação Markdown:
+"
+        f"- Nome: {dados['nome']}
+"
+        f"- Idade: {dados['idade']} anos
+"
+        f"- Peso: {dados['peso_kg']} kg
+"
+        f"- Altura: {dados['altura_cm']} cm
+"
+        f"- Nível: {dados['nivel']}
+"
+        f"- Objetivo: {dados['objetivo']}
+"
+        f"- Dias/semana: {dados['dias_semana']}
+"
+        f"- Equipamentos: {dados['equipamentos']}
+"
+        f"- Restrições: {dados['restricoes']}
+"
+        "Formato desejado:
+"
+        "Dia da semana – Treino (ex: Segunda – Peito e Tríceps).
+"
+        "Em cada dia, listagem numerada: Exercício – Séries x Repetições.
+"
+        "Após a listagem, inclua a seção Dicas Personalizadas sem usar marcadores '*':
+"
+        "Dicas Personalizadas:
+"
+        "- texto da dica
+"
+        "Finalize com orientações gerais."
+    ).\n"
         "Em cada dia, listagem numerada: Exercício – Séries x Repetições.\n"
         "Após listagem, inclua seção 'Dicas personalizadas:' com bullets.\n"
         "Finalize com orientações gerais."
