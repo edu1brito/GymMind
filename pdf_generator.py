@@ -6,7 +6,6 @@ import io
 # Inicializa cliente OpenAI
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-
 def gerar_treino(dados: dict) -> tuple[str, list[dict]]:
     """
     Gera o plano completo em texto e retorna uma lista estruturada dos exercícios.
@@ -15,27 +14,29 @@ def gerar_treino(dados: dict) -> tuple[str, list[dict]]:
       - treino: lista de dicts com chaves 'exercicio', 'series', 'repeticoes'.
     """
     prompt = f"""
-Você é um personal trainer experiente. Com base nos dados abaixo, crie um **plano de treino completo**:
+Você é um personal trainer experiente e atualizado com as diretrizes da ACSM (American College of Sports Medicine) e da OMS (Organização Mundial da Saúde).
+
+Com base nos dados abaixo, elabore um **plano de treino completo e seguro**, alinhado com boas práticas científicas:
 
 - Nome: {dados['nome']}
 - Idade: {dados['idade']} anos
 - Peso: {dados['peso_kg']} kg
 - Altura: {dados['altura_cm']} cm
-- Nível: {dados['nivel']}
+- Nível de experiência: {dados['nivel']}
 - Objetivo: {dados['objetivo']}
 - Dias por semana: {dados['dias_semana']}
-- Equipamentos: {dados['equipamentos']}
-- Restrições: {dados['restricoes']}
+- Equipamentos disponíveis: {dados['equipamentos']}
+- Restrições ou lesões: {dados['restricoes']}
 
-**Instruções de formatação**:
+**Requisitos do plano**:
 1. Separe o plano por dia da semana (ex: “Segunda – Peito e Tríceps”).
-2. Para cada dia, liste **numerado**:
-   - Exercício – Séries x Repetições
-3. Ao final de cada dia, acrescente **dicas personalizadas** (álcool, sono, alimentação, postura, etc.).
-4. Inclua uma seção final de **orientações gerais** (aquecimento, descanso, hidratação).
+2. Para cada dia, liste os exercícios **numerados** com o formato:  
+   - Exercício – Séries x Repetições (ex: Supino reto – 4x10)
+3. Após cada dia, inclua **dicas personalizadas** sobre postura, alimentação, hidratação, descanso, ou variações.
+4. Finalize com uma seção de **orientações gerais** que incluam aquecimento, descanso entre treinos, sono e hidratação — tudo baseado em recomendações da ACSM e OMS.
 
-Use linguagem clara e motivacional.
-    """
+Use linguagem clara, encorajadora e profissional. Evite exageros e foque em segurança, consistência e adaptação progressiva.
+"""
 
     resp = client.chat.completions.create(
         model="gpt-3.5-turbo",
@@ -78,7 +79,7 @@ Use linguagem clara e motivacional.
 
 def gerar_pdf(nome: str, texto: str, treino: list[dict]) -> bytes:
     """
-    Gera um PDF com o plano completo em texto e uma tabela de exercícios.
+    Gera um PDF com o plano completo em texto, tabela de exercícios e referências.
     """
     pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
@@ -122,11 +123,18 @@ def gerar_pdf(nome: str, texto: str, treino: list[dict]) -> bytes:
         pdf.cell(30, 8, str(item.get('series', '')), border=1, align='C')
         pdf.cell(30, 8, str(item.get('repeticoes', '')), border=1, align='C', ln=True)
 
-    # Rodapé
-    pdf.ln(6)
+    # Rodapé com referência
+    pdf.ln(10)
     pdf.set_font('Arial', 'I', 10)
     pdf.set_text_color(136, 136, 136)
-    pdf.cell(0, 10, 'Gerado por GymMind IA', align='C')
+    pdf.cell(0, 8, 'Gerado por GymMind IA', ln=True, align='C')
+    pdf.ln(4)
+    pdf.set_font('Arial', 'I', 9)
+    pdf.multi_cell(0, 6,
+        "Referências utilizadas:\n"
+        "- ACSM - American College of Sports Medicine: Guidelines for Exercise Testing and Prescription\n"
+        "- OMS - Organização Mundial da Saúde: Recomendação Global de Atividade Física para a Saúde"
+    )
 
     buffer = io.BytesIO()
     pdf.output(buffer)
