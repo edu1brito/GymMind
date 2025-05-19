@@ -47,7 +47,7 @@ Com base nos dados do usuário abaixo, elabore um plano de treino completo e seg
 2) Liste numerado: “Exercício – Séries x Repetições” (ex: Agachamento – 4x10).
 3) Após cada dia, acrescente dicas (postura, respiração, alimentação, descanso).
 4) Termine com orientações gerais (aquecimento, hidratação, sono, alongamento).
-
+5) Leve a sério o campo de Restrições e faça o treino com base nisso.
 Use linguagem clara, realista e motivacional.
 """
 
