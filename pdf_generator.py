@@ -79,7 +79,8 @@ Use linguagem clara, encorajadora e profissional. Evite exageros e foque em segu
 
 def gerar_pdf(nome: str, texto: str, treino: list[dict]) -> bytes:
     """
-    Gera um PDF com o plano completo em texto, tabela de exercícios e referências.
+    Gera um PDF com o plano completo em texto, tabela de exercícios (se houver)
+    e referências no rodapé.
     """
     pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
@@ -102,40 +103,62 @@ def gerar_pdf(nome: str, texto: str, treino: list[dict]) -> bytes:
     pdf.multi_cell(0, 6, texto)
     pdf.ln(8)
 
-    # Seção de tabela de exercícios
-    pdf.set_font('Arial', 'B', 14)
-    pdf.set_text_color(44, 62, 80)
-    pdf.cell(0, 8, 'Tabela de Exercícios', ln=True)
-    pdf.ln(2)
+    # Se existir lista de exercícios, renderiza a tabela
+    if treino:
+        pdf.set_font('Arial', 'B', 14)
+        pdf.set_text_color(44, 62, 80)
+        pdf.cell(0, 8, 'Tabela de Exercícios', ln=True)
+        pdf.ln(2)
 
-    # Cabeçalho da tabela
-    pdf.set_font('Arial', 'B', 12)
-    pdf.set_fill_color(223, 240, 255)
-    pdf.cell(100, 8, 'Exercício', border=1, align='C', fill=True)
-    pdf.cell(30, 8, 'Séries', border=1, align='C', fill=True)
-    pdf.cell(30, 8, 'Repetições', border=1, align='C', fill=True, ln=True)
+        # Cabeçalho da tabela
+        pdf.set_font('Arial', 'B', 12)
+        pdf.set_fill_color(223, 240, 255)
+        pdf.cell(100, 8, 'Exercício', border=1, align='C', fill=True)
+        pdf.cell(30, 8, 'Séries',   border=1, align='C', fill=True)
+        pdf.cell(30, 8, 'Repetições', border=1, align='C', fill=True, ln=True)
 
-    # Linhas de exercícios
-    pdf.set_font('Arial', '', 12)
-    pdf.set_text_color(0, 0, 0)
-    for item in treino:
-        pdf.cell(100, 8, item.get('exercicio', ''), border=1)
-        pdf.cell(30, 8, str(item.get('series', '')), border=1, align='C')
-        pdf.cell(30, 8, str(item.get('repeticoes', '')), border=1, align='C', ln=True)
+        # Linhas de dados
+        pdf.set_font('Arial', '', 12)
+        for item in treino:
+            pdf.cell(100, 8, item['exercicio'], border=1)
+            pdf.cell(30, 8, str(item['series']), border=1, align='C')
+            pdf.cell(30, 8, str(item['repeticoes']), border=1, align='C', ln=True)
 
-    # Rodapé com referência
-    pdf.ln(10)
+        pdf.ln(6)
+
+    # Rodapé fixo no final da página
+    pdf.set_y(-35)
     pdf.set_font('Arial', 'I', 10)
     pdf.set_text_color(136, 136, 136)
-    pdf.cell(0, 8, 'Gerado por GymMind IA', ln=True, align='C')
-    pdf.ln(4)
+    pdf.cell(0, 6, 'Gerado por GymMind IA', ln=True, align='C')
+
     pdf.set_font('Arial', 'I', 9)
-    pdf.multi_cell(0, 6,
+    pdf.multi_cell(0, 5,
         "Referências utilizadas:\n"
-        "- ACSM - American College of Sports Medicine: Guidelines for Exercise Testing and Prescription\n"
-        "- OMS - Organização Mundial da Saúde: Recomendação Global de Atividade Física para a Saúde"
+        "- ACSM: Guidelines for Exercise Testing and Prescription\n"
+        "- OMS: Recomendação Global de Atividade Física para a Saúde"
     )
 
     buffer = io.BytesIO()
     pdf.output(buffer)
     return buffer.getvalue()
+
+
+if __name__ == "__main__":
+    # Exemplo de uso rápido
+    dados_exemplo = {
+        'nome': 'Fulano',
+        'idade': 30,
+        'peso_kg': 75,
+        'altura_cm': 175,
+        'nivel': 'Intermediário',
+        'objetivo': 'Hipertrofia',
+        'dias_semana': 4,
+        'equipamentos': 'Halteres, Banco',
+        'restricoes': 'Nenhuma'
+    }
+    texto, treino = gerar_treino(dados_exemplo)
+    pdf_bytes = gerar_pdf(dados_exemplo['nome'], texto, treino)
+    with open("plano_exemplo.pdf", "wb") as f:
+        f.write(pdf_bytes)
+    print("PDF de exemplo gerado: plano_exemplo.pdf")
