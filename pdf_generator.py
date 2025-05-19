@@ -13,7 +13,9 @@ def gerar_pdf(nome: str, texto: str) -> bytes:
     - Rodapé com crédito
     """
     # Limpa Markdown e asteriscos
-    texto_limpo = texto.replace('*', '')
+   import re
+texto_limpo = re.sub(r'\*+', '', texto)
+
     lines = [line.strip() for line in texto_limpo.splitlines()]
 
     pdf = FPDF(orientation='P', unit='mm', format='A4')
