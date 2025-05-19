@@ -77,54 +77,7 @@ Use linguagem clara, encorajadora e profissional. Evite exageros e foque em segu
     return texto, treino
 
 
-def gerar_pdf(nome: str, texto: str, treino: list[dict]) -> bytes:
-    """
-    Gera um PDF com o plano completo em texto, tabela de exercícios (se houver)
-    e referências no rodapé.
-    """
-    pdf = FPDF(orientation='P', unit='mm', format='A4')
-    pdf.add_page()
 
-    # Cabeçalho
-    pdf.set_font('Arial', 'B', 16)
-    pdf.set_text_color(46, 134, 222)
-    pdf.cell(0, 10, 'Plano de Treino Personalizado', ln=True, align='C')
-    pdf.ln(4)
-
-    # Nome do usuário
-    pdf.set_font('Arial', '', 12)
-    pdf.set_text_color(51, 51, 51)
-    pdf.cell(0, 8, f'Nome: {nome}', ln=True)
-    pdf.ln(6)
-
-    # Texto completo do plano
-    pdf.set_font('Arial', '', 11)
-    pdf.set_text_color(0, 0, 0)
-    pdf.multi_cell(0, 6, texto)
-    pdf.ln(8)
-
-    # Se existir lista de exercícios, renderiza a tabela
-    if treino:
-        pdf.set_font('Arial', 'B', 14)
-        pdf.set_text_color(44, 62, 80)
-        pdf.cell(0, 8, 'Tabela de Exercícios', ln=True)
-        pdf.ln(2)
-
-        # Cabeçalho da tabela
-        pdf.set_font('Arial', 'B', 12)
-        pdf.set_fill_color(223, 240, 255)
-        pdf.cell(100, 8, 'Exercício', border=1, align='C', fill=True)
-        pdf.cell(30, 8, 'Séries',   border=1, align='C', fill=True)
-        pdf.cell(30, 8, 'Repetições', border=1, align='C', fill=True, ln=True)
-
-        # Linhas de dados
-        pdf.set_font('Arial', '', 12)
-        for item in treino:
-            pdf.cell(100, 8, item['exercicio'], border=1)
-            pdf.cell(30, 8, str(item['series']), border=1, align='C')
-            pdf.cell(30, 8, str(item['repeticoes']), border=1, align='C', ln=True)
-
-        pdf.ln(6)
 
     # Rodapé fixo no final da página
     pdf.set_y(-35)
