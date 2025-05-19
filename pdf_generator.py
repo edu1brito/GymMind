@@ -38,14 +38,18 @@ def quebra_palavras_longa(texto: str, limite: int = 20) -> str:
 def limpar_texto(texto: str) -> str:
     """
     Pipeline de limpeza:
+     0) Elimina qualquer caractere fora do Latin‑1
      1) Remove emojis, variation selectors e zero-width joiners
      2) Substitui símbolos problemáticos por equivalentes Latin‑1
      3) Aplica quebra de palavras longas
     """
-    # 1) retira tudo que não é suportado pela fonte Latin‑1
+    # 0) descarta tudo que não está no Latin‑1 (0x00–0xFF)
+    texto = texto.encode('latin-1', 'ignore').decode('latin-1')
+
+    # 1) retira emojis e afins
     texto = remove_emojis_e_variation(texto)
 
-    # 2) mapeamento de símbolos “Unicode leve” para Latin‑1
+    # 2) substitui símbolos “Unicode leve” por Latin‑1
     simbolos = {
         '•': '-', '*': '',
         '–': '-', '—': '-',
@@ -57,6 +61,7 @@ def limpar_texto(texto: str) -> str:
 
     # 3) quebra palavras longas
     return quebra_palavras_longa(texto, limite=20)
+
 
 # ----------------------------------------
 # Geração do PDF
