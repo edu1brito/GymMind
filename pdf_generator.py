@@ -68,9 +68,6 @@ def limpar_texto(texto: str) -> str:
 # ----------------------------------------
 
 def gerar_pdf(nome: str, texto: str) -> bytes:
-    """
-    Gera um PDF A4 com plano de treino, estilizado em vermelho e preto.
-    """
     texto_limpo = limpar_texto(texto)
     linhas = [l.strip() for l in texto_limpo.splitlines()]
 
@@ -80,13 +77,16 @@ def gerar_pdf(nome: str, texto: str) -> bytes:
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
 
-    # Título (vermelho, negrito, grande)
+    # calcula largura útil para o corpo
+    usable_width = pdf.w - pdf.l_margin - pdf.r_margin
+
+    # Título
     pdf.set_font('Arial', 'B', 20)
     pdf.set_text_color(255, 0, 0)
     pdf.cell(0, 15, 'Plano de Treino Personalizado', ln=True, align='C')
     pdf.ln(5)
 
-    # Subtítulo (nome do usuário) preto e negrito
+    # Subtítulo
     pdf.set_font('Arial', 'B', 14)
     pdf.set_text_color(0, 0, 0)
     pdf.cell(0, 10, f'Nome: {nome}', ln=True)
@@ -98,38 +98,40 @@ def gerar_pdf(nome: str, texto: str) -> bytes:
             pdf.ln(4)
             continue
 
-        # Dia da semana / seção (ex: "Segunda - Peito e Tríceps")
+        # Dia/seção
         if '-' in linha and not linha[0].isdigit():
-            pdf.set_fill_color(240, 240, 240)      # fundo cinza claro
+            pdf.set_fill_color(240, 240, 240)
             pdf.set_font('Arial', 'B', 13)
-            pdf.set_text_color(255, 0, 0)          # vermelho
+            pdf.set_text_color(255, 0, 0)
+            # sem indent, usa largura total
             pdf.cell(0, 8, linha, ln=True, fill=True)
             pdf.ln(2)
 
-        # Exercícios numerados (começam com dígito)
+        # Exercício (indent 8 mm)
         elif linha[0].isdigit():
             pdf.set_font('Arial', '', 11)
             pdf.set_text_color(0, 0, 0)
-            pdf.cell(8)                            # indentação leve
-            pdf.multi_cell(0, 6, linha)
-            pdf.ln(1)
+            indent = 8
+            pdf.set_x(pdf.l_margin + indent)
+            pdf.multi_cell(usable_width - indent, 6, linha)
+            # não precisa de pdf.ln()
 
-        # Dicas (linhas que começam com "-")
+        # Dica (indent 12 mm)
         elif linha.startswith('-'):
             pdf.set_font('Arial', 'I', 10)
-            pdf.set_text_color(100, 100, 100)      # cinza escuro
-            pdf.cell(12)
-            pdf.multi_cell(0, 5, linha)
-            pdf.ln(1)
-
-        # Texto geral (orientações finais)
+            pdf.set_text_color(100, 100, 100)
+            indent = 12
+            pdf.set_x(pdf.l_margin + indent)
+            pdf.multi_cell(usable_width - indent, 5, linha)
+            
+        # Texto geral
         else:
             pdf.set_font('Arial', 'I', 10)
             pdf.set_text_color(80, 80, 80)
-            pdf.multi_cell(0, 6, linha)
-            pdf.ln(1)
+            # sem indent, usa largura total
+            pdf.multi_cell(usable_width, 6, linha)
 
-    # Rodapé (cinza médio, itálico)
+    # Rodapé
     pdf.set_y(-20)
     pdf.set_font('Arial', 'I', 9)
     pdf.set_text_color(120, 120, 120)
