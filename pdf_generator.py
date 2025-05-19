@@ -4,7 +4,7 @@ from fpdf import FPDF
 
 def quebra_palavras_longa(texto: str, limite=30) -> str:
     """
-    Insere espaços artificiais em palavras muito longas para evitar erros no FPDF.
+    Insere espaços artificiais em palavras muito longas para evitar estouro de linha no FPDF.
     """
     return re.sub(
         rf'(\S{{{limite},}})',
@@ -14,15 +14,21 @@ def quebra_palavras_longa(texto: str, limite=30) -> str:
 
 def limpar_texto(texto: str) -> str:
     """
-    Remove símbolos problemáticos e aplica quebra de palavras longas.
+    Substitui caracteres problemáticos e quebra palavras muito longas.
     """
-    texto = texto.replace('•', '-')
-    texto = texto.replace('*', '')
-    texto = texto.replace('–', '-').replace('—', '-')
-    texto = quebra_palavras_longa(texto)
-    return texto
+    simbolos_problematicos = {
+        '•': '-', '*': '',
+        '–': '-', '—': '-',  # travessões diferentes
+        '”': '"', '“': '"', '’': "'", '‘': "'"
+    }
+    for simbolo, substituto in simbolos_problematicos.items():
+        texto = texto.replace(simbolo, substituto)
+    return quebra_palavras_longa(texto)
 
 def gerar_pdf(nome: str, texto: str) -> bytes:
+    """
+    Gera um PDF personalizado com o plano de treino.
+    """
     texto_limpo = limpar_texto(texto)
     linhas = [linha.strip() for linha in texto_limpo.splitlines()]
 
@@ -33,38 +39,41 @@ def gerar_pdf(nome: str, texto: str) -> bytes:
     pdf.set_font('Arial', 'B', 18)
     pdf.set_text_color(30, 144, 255)
     pdf.cell(0, 12, 'Plano de Treino Personalizado', ln=True, align='C')
-    pdf.ln(4)
+    pdf.ln(6)
 
-    # Nome
+    # Nome do usuário
     pdf.set_font('Arial', 'B', 14)
     pdf.set_text_color(0, 0, 0)
     pdf.cell(0, 8, f'Nome: {nome}', ln=True)
     pdf.ln(6)
 
-    # Corpo
+    # Corpo do plano
     for linha in linhas:
         if not linha:
             pdf.ln(2)
             continue
 
         if '-' in linha and not linha[0].isdigit():
-            # Dia da semana
+            # Cabeçalho do dia (ex: Segunda - Peito e Tríceps)
             pdf.set_font('Arial', 'B', 13)
             pdf.set_text_color(46, 134, 222)
-            pdf.cell(0, 8, linha, ln=True)
+            pdf.multi_cell(0, 8, linha)
             pdf.ln(1)
+
         elif linha[0].isdigit():
-            # Exercício
+            # Exercícios numerados
             pdf.set_font('Arial', '', 11)
             pdf.set_text_color(0, 0, 0)
             pdf.cell(5)
             pdf.multi_cell(0, 6, linha)
+
         elif linha.startswith('-'):
-            # Dica
+            # Dicas (começam com "-")
             pdf.set_font('Arial', 'I', 10)
             pdf.set_text_color(80, 80, 80)
             pdf.cell(10)
             pdf.multi_cell(0, 5, f'- {linha[1:].strip()}')
+
         else:
             # Orientações gerais
             pdf.set_font('Arial', 'I', 10)
@@ -79,4 +88,5 @@ def gerar_pdf(nome: str, texto: str) -> bytes:
 
     buffer = io.BytesIO()
     pdf.output(buffer)
+    buffer.seek(0)
     return buffer.getvalue()
