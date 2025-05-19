@@ -11,9 +11,10 @@ def gerar_pdf(nome: str, texto: str) -> bytes:
     - Listagem numerada
     - Dicas como bullets em itálico
     - Rodapé com crédito
+    - Não use asteriscos
     """
     # Limpa Markdown e asteriscos
-texto_limpo = texto.replace('*', '')
+
 
 
     lines = [line.strip() for line in texto_limpo.splitlines()]
@@ -24,7 +25,7 @@ texto_limpo = texto.replace('*', '')
     # Cabeçalho
     pdf.set_font('Arial', 'B', 18)
     pdf.set_text_color(30, 144, 255)
-    pdf.cell(0, 12, 'Plano de Treino Personalizado', ln=True, align='C')
+    pdf.cell(0, 12, 'Plano de Treino Personalizado de Jack', ln=True, align='C')
     pdf.ln(4)
 
     # Nome do usuário
