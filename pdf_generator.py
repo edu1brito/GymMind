@@ -67,60 +67,67 @@ def limpar_texto(texto: str) -> str:
 # Geração do PDF
 # ----------------------------------------
 
-def gerar_pdf(nome: str, texto: str, treino: list[dict] | None = None) -> bytes:
+def gerar_pdf(nome: str, texto: str) -> bytes:
     """
-    Gera um PDF com o plano completo em texto e, opcionalmente, uma tabela de exercícios.
+    Gera um PDF A4 com plano de treino, sem usar fontes Unicode externas.
     """
+    texto_limpo = limpar_texto(texto)
+    linhas = [l.strip() for l in texto_limpo.splitlines()]
+
     pdf = FPDF(orientation='P', unit='mm', format='A4')
+    pdf.set_left_margin(10)
+    pdf.set_right_margin(10)
+    pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
 
-    # --- Logo, cabeçalho etc ---
+    # Cabeçalho
+    pdf.set_font('Arial', 'B', 18)
+    pdf.set_text_color(30, 144, 255)
+    pdf.cell(0, 12, 'Plano de Treino Personalizado', ln=True, align='C')
+    pdf.ln(6)
 
-    # Texto completo do plano
-    pdf.set_font('Arial', '', 11)
-    pdf.multi_cell(0, 6, texto)
-    pdf.ln(8)
+    # Nome do usuário
+    pdf.set_font('Arial', 'B', 14)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(0, 8, f'Nome: {nome}', ln=True)
+    pdf.ln(6)
 
-    # Se me passou a lista de treino, roda a tabela; se não, pula essa parte
-    if treino:
-        # ... seu bloco de geração da tabela …
-    ```
+    # Corpo do plano
+    for linha in linhas:
+        if not linha:
+            pdf.ln(3)
+            continue
 
-Por exemplo:
+        if '-' in linha and not linha[0].isdigit():
+            pdf.set_font('Arial', 'B', 13)
+            pdf.set_text_color(46, 134, 222)
+            pdf.multi_cell(0, 8, linha)
+            pdf.ln(1)
 
-```python
-def gerar_pdf(nome: str, texto: str, treino: list[dict] | None = None) -> bytes:
-    pdf = FPDF(orientation='P', unit='mm', format='A4')
-    pdf.add_page()
+        elif linha[0].isdigit():
+            pdf.set_font('Arial', '', 11)
+            pdf.set_text_color(0, 0, 0)
+            pdf.multi_cell(0, 6, '    ' + linha)  # indentação leve
+            pdf.ln(1)
 
-    # --- Logo e cabeçalho (conforme mostrado antes) …
+        elif linha.startswith('-'):
+            pdf.set_font('Arial', 'I', 10)
+            pdf.set_text_color(80, 80, 80)
+            pdf.multi_cell(0, 5, '      ' + linha.strip())
+            pdf.ln(1)
 
-    # Texto
-    pdf.set_font('Arial', '', 11)
-    pdf.multi_cell(0, 6, texto)
-    pdf.ln(8)
+        else:
+            pdf.set_font('Arial', 'I', 10)
+            pdf.set_text_color(80, 80, 80)
+            pdf.multi_cell(0, 5, linha)
+            pdf.ln(1)
 
-    # Tabela apenas se treino não for None
-    if treino:
-        pdf.set_font('Arial', 'B', 14)
-        pdf.cell(0, 8, 'Tabela de Exercícios', ln=True)
-        pdf.ln(2)
+    # Rodapé
+    pdf.set_y(-20)
+    pdf.set_font('Arial', 'I', 9)
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(0, 5, 'Gerado por GymMind IA', align='C')
 
-        # Cabeçalho da tabela
-        pdf.set_font('Arial', 'B', 12)
-        pdf.set_fill_color(223, 240, 255)
-        pdf.cell(100, 8, 'Exercício', border=1, align='C', fill=True)
-        pdf.cell(30, 8, 'Séries', border=1, align='C', fill=True)
-        pdf.cell(30, 8, 'Repetições', border=1, align='C', fill=True, ln=True)
-
-        # Linhas:
-        pdf.set_font('Arial', '', 12)
-        for item in treino:
-            pdf.cell(100, 8, item['exercicio'], border=1)
-            pdf.cell(30, 8, str(item['series']), border=1, align='C')
-            pdf.cell(30, 8, str(item['repeticoes']), border=1, align='C', ln=True)
-
-    # Rodapé…
     buffer = io.BytesIO()
     pdf.output(buffer)
     buffer.seek(0)
