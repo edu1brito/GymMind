@@ -2,31 +2,29 @@ import io
 import re
 from fpdf import FPDF
 
-def quebra_palavras_longa(texto, limite=40):
+def quebra_palavras_longa(texto: str, limite=30) -> str:
     """
-    Quebra palavras muito longas para evitar erro de renderização no FPDF.
+    Insere espaços artificiais em palavras muito longas para evitar erros no FPDF.
     """
     return re.sub(
-        r'\S{' + str(limite) + r',}',
-        lambda m: ' '.join([m.group(0)[i:i+limite] for i in range(0, len(m.group(0)), limite)]),
+        rf'(\S{{{limite},}})',
+        lambda m: ' '.join(m.group(0)[i:i+limite] for i in range(0, len(m.group(0)), limite)),
         texto
     )
 
-# Função para gerar PDF a partir de texto limpo
+def limpar_texto(texto: str) -> str:
+    """
+    Remove símbolos problemáticos e aplica quebra de palavras longas.
+    """
+    texto = texto.replace('•', '-')
+    texto = texto.replace('*', '')
+    texto = texto.replace('–', '-').replace('—', '-')
+    texto = quebra_palavras_longa(texto)
+    return texto
+
 def gerar_pdf(nome: str, texto: str) -> bytes:
-    """
-    Gera um PDF estilizado:
-    - Título centralizado
-    - Nome do usuário
-    - Dias da semana em destaque
-    - Listagem numerada
-    - Dicas como bullets em itálico
-    - Rodapé com crédito
-    """
-    # Limpeza e proteção contra erros do PDF
-    texto_limpo = texto.replace('*', '').replace('–', '-').replace('—', '-').replace('•', '-')
-    texto_limpo = quebra_palavras_longa(texto_limpo)
-    lines = [line.strip() for line in texto_limpo.splitlines()]
+    texto_limpo = limpar_texto(texto)
+    linhas = [linha.strip() for linha in texto_limpo.splitlines()]
 
     pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
@@ -37,40 +35,41 @@ def gerar_pdf(nome: str, texto: str) -> bytes:
     pdf.cell(0, 12, 'Plano de Treino Personalizado', ln=True, align='C')
     pdf.ln(4)
 
-    # Nome do usuário
+    # Nome
     pdf.set_font('Arial', 'B', 14)
     pdf.set_text_color(0, 0, 0)
     pdf.cell(0, 8, f'Nome: {nome}', ln=True)
     pdf.ln(6)
 
-    # Corpo do plano
-    for txt in lines:
-        if not txt:
+    # Corpo
+    for linha in linhas:
+        if not linha:
             pdf.ln(2)
             continue
-        if '-' in txt and not txt[0].isdigit():
+
+        if '-' in linha and not linha[0].isdigit():
             # Dia da semana
             pdf.set_font('Arial', 'B', 13)
             pdf.set_text_color(46, 134, 222)
-            pdf.cell(0, 8, txt, ln=True)
+            pdf.cell(0, 8, linha, ln=True)
             pdf.ln(1)
-        elif txt[0].isdigit():
-            # Exercício numerado
+        elif linha[0].isdigit():
+            # Exercício
             pdf.set_font('Arial', '', 11)
             pdf.set_text_color(0, 0, 0)
             pdf.cell(5)
-            pdf.multi_cell(0, 6, txt)
-        elif txt.startswith('-'):
-            # Dica personalizada
+            pdf.multi_cell(0, 6, linha)
+        elif linha.startswith('-'):
+            # Dica
             pdf.set_font('Arial', 'I', 10)
             pdf.set_text_color(80, 80, 80)
             pdf.cell(10)
-            pdf.multi_cell(0, 5, f'- {txt[1:].strip()}')
+            pdf.multi_cell(0, 5, f'- {linha[1:].strip()}')
         else:
             # Orientações gerais
             pdf.set_font('Arial', 'I', 10)
             pdf.set_text_color(80, 80, 80)
-            pdf.multi_cell(0, 5, txt)
+            pdf.multi_cell(0, 5, linha)
 
     # Rodapé
     pdf.set_y(-20)
