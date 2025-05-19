@@ -107,24 +107,7 @@ def gerar_pdf(nome: str, texto: str, treino: list[dict]) -> bytes:
     pdf.multi_cell(0, 6, texto)
     pdf.ln(8)
 
-    # Tabela de exercícios
-    pdf.set_font('Arial', 'B', 14)
-    pdf.set_text_color(44, 62, 80)
-    pdf.cell(0, 8, 'Tabela de Exercícios', ln=True)
-    pdf.ln(2)
-
-    pdf.set_font('Arial', 'B', 12)
-    pdf.set_fill_color(223, 240, 255)
-    pdf.cell(100, 8, 'Exercício', border=1, align='C', fill=True)
-    pdf.cell(30, 8, 'Séries', border=1, align='C', fill=True)
-    pdf.cell(30, 8, 'Repetições', border=1, align='C', fill=True, ln=True)
-
-    pdf.set_font('Arial', '', 12)
-    pdf.set_text_color(0, 0, 0)
-    for item in treino:
-        pdf.cell(100, 8, item.get('exercicio', ''), border=1)
-        pdf.cell(30, 8, str(item.get('series', '')), border=1, align='C')
-        pdf.cell(30, 8, str(item.get('repeticoes', '')), border=1, align='C', ln=True)
+  
 
     # Rodapé
     pdf.ln(6)
