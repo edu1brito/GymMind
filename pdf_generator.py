@@ -1,3 +1,23 @@
+import io
+import re
+from fpdf import FPDF
+
+# Aqui vem a definição da função remove_emojis_e_variation
+def remove_emojis_e_variation(texto: str) -> str:
+    # código aqui...
+
+# definição da função quebra_palavras_longa
+def quebra_palavras_longa(texto: str, limite: int = 20) -> str:
+    # código aqui...
+
+# definição da função limpar_texto
+def limpar_texto(texto: str) -> str:
+    # código aqui...
+
+# definição da função gerar_pdf
+def gerar_pdf(nome: str, texto: str) -> bytes:
+    # código aqui...
+
 def gerar_pdf(nome: str, texto: str) -> bytes:
     """
     Gera um PDF A4 com plano de treino, sem usar fontes Unicode externas.
