@@ -2,8 +2,30 @@ import io
 import re
 from fpdf import FPDF
 
-def quebra_palavras_longa(texto: str, limite=20) -> str:
-    # Usa zero-width spaces para quebras invisíveis mais seguras
+# ----------------------------------------
+# Funções de limpeza do texto
+# ----------------------------------------
+
+# Regex que captura emojis, variation selectors e zero-width joiners
+CLEAN_PATTERN = re.compile(
+    r'('
+    r'[\U00010000-\U0010FFFF]|'   # emojis e símbolos fora do BMP
+    r'[\uFE00-\uFE0F]|'           # variation selectors
+    r'[\u200D]'                   # zero-width joiner
+    r')',
+    flags=re.UNICODE
+)
+
+def remove_emojis_e_variation(texto: str) -> str:
+    """
+    Remove emojis, selectors de variação e zero-width joiners.
+    """
+    return CLEAN_PATTERN.sub('', texto)
+
+def quebra_palavras_longa(texto: str, limite: int = 20) -> str:
+    """
+    Insere zero-width spaces em palavras muito longas para evitar estouro de linha.
+    """
     return re.sub(
         rf'(\S{{{limite},}})',
         lambda m: '\u200b'.join(
@@ -13,25 +35,37 @@ def quebra_palavras_longa(texto: str, limite=20) -> str:
         texto
     )
 
-
-# Regex que “abraça” todos os emojis e símbolos além do BMP
-EMOJI_PATTERN = re.compile(r'''
-    [\U00010000-\U0010FFFF]  # qualquer ponto de código acima de U+10000
-''', flags=re.UNICODE | re.VERBOSE)
-
-def remove_emojis(texto: str) -> str:
-    return EMOJI_PATTERN.sub('', texto)
-
 def limpar_texto(texto: str) -> str:
-   # primeiro, tira emojis e símbolos não-Latin1
-    texto = remove_emojis(texto)
-    simbolos = {'•':'-', '*':'', '–':'-', '—':'-',
-                '”':'"', '“':'"', '’':"'", '‘':"'"}
-    for s, sub in simbolos.items():
-        texto = texto.replace(s, sub)
-    return quebra_palavras_longa(texto)
+    """
+    Pipeline de limpeza:
+     1) Remove emojis, variation selectors e zero-width joiners
+     2) Substitui símbolos problemáticos por equivalentes Latin‑1
+     3) Aplica quebra de palavras longas
+    """
+    # 1) retira tudo que não é suportado pela fonte Latin‑1
+    texto = remove_emojis_e_variation(texto)
+
+    # 2) mapeamento de símbolos “Unicode leve” para Latin‑1
+    simbolos = {
+        '•': '-', '*': '',
+        '–': '-', '—': '-',
+        '“': '"', '”': '"',
+        '‘': "'", '’': "'"
+    }
+    for orig, sub in simbolos.items():
+        texto = texto.replace(orig, sub)
+
+    # 3) quebra palavras longas
+    return quebra_palavras_longa(texto, limite=20)
+
+# ----------------------------------------
+# Geração do PDF
+# ----------------------------------------
 
 def gerar_pdf(nome: str, texto: str) -> bytes:
+    """
+    Gera um PDF A4 com plano de treino, sem usar fontes Unicode externas.
+    """
     texto_limpo = limpar_texto(texto)
     linhas = [l.strip() for l in texto_limpo.splitlines()]
 
@@ -43,49 +77,53 @@ def gerar_pdf(nome: str, texto: str) -> bytes:
 
     # Cabeçalho
     pdf.set_font('Arial', 'B', 18)
-    pdf.set_text_color(30,144,255)
+    pdf.set_text_color(30, 144, 255)
     pdf.cell(0, 12, 'Plano de Treino Personalizado', ln=True, align='C')
     pdf.ln(6)
 
-    # Nome
+    # Nome do usuário
     pdf.set_font('Arial', 'B', 14)
-    pdf.set_text_color(0,0,0)
+    pdf.set_text_color(0, 0, 0)
     pdf.cell(0, 8, f'Nome: {nome}', ln=True)
     pdf.ln(6)
 
-    # Corpo
+    # Corpo do plano
     for linha in linhas:
         if not linha:
             pdf.ln(2)
             continue
 
+        # Dia da semana ou seção (ex: "Segunda - Peito e Tríceps")
         if '-' in linha and not linha[0].isdigit():
             pdf.set_font('Arial', 'B', 13)
-            pdf.set_text_color(46,134,222)
+            pdf.set_text_color(46, 134, 222)
             pdf.multi_cell(180, 8, linha)
             pdf.ln(1)
 
-        elif linha[0].isdigit():
+        # Exercícios numerados (começam com dígito)
+        elif linha and linha[0].isdigit():
             pdf.set_font('Arial', '', 11)
-            pdf.set_text_color(0,0,0)
+            pdf.set_text_color(0, 0, 0)
             pdf.cell(5)
             pdf.multi_cell(180, 6, linha)
 
+        # Dicas (linhas que começam com "-")
         elif linha.startswith('-'):
             pdf.set_font('Arial', 'I', 10)
-            pdf.set_text_color(80,80,80)
+            pdf.set_text_color(80, 80, 80)
             pdf.cell(10)
-            pdf.multi_cell(170, 5, f'- {linha[1:].strip()}')
+            pdf.multi_cell(170, 5, linha)
 
+        # Texto geral (orientações finais)
         else:
             pdf.set_font('Arial', 'I', 10)
-            pdf.set_text_color(80,80,80)
+            pdf.set_text_color(80, 80, 80)
             pdf.multi_cell(180, 5, linha)
 
     # Rodapé
     pdf.set_y(-20)
     pdf.set_font('Arial', 'I', 9)
-    pdf.set_text_color(150,150,150)
+    pdf.set_text_color(150, 150, 150)
     pdf.cell(0, 5, 'Gerado por GymMind IA', align='C')
 
     buffer = io.BytesIO()
