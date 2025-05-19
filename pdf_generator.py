@@ -13,7 +13,18 @@ def quebra_palavras_longa(texto: str, limite=20) -> str:
         texto
     )
 
+
+# Regex que “abraça” todos os emojis e símbolos além do BMP
+EMOJI_PATTERN = re.compile(r'''
+    [\U00010000-\U0010FFFF]  # qualquer ponto de código acima de U+10000
+''', flags=re.UNICODE | re.VERBOSE)
+
+def remove_emojis(texto: str) -> str:
+    return EMOJI_PATTERN.sub('', texto)
+
 def limpar_texto(texto: str) -> str:
+   # primeiro, tira emojis e símbolos não-Latin1
+    texto = remove_emojis(texto)
     simbolos = {'•':'-', '*':'', '–':'-', '—':'-',
                 '”':'"', '“':'"', '’':"'", '‘':"'"}
     for s, sub in simbolos.items():
