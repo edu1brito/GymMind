@@ -38,7 +38,7 @@ Com base nos dados abaixo, elabore um **plano de treino completo e seguro**, ali
    - Exercício – Séries x Repetições (ex: Supino reto – 4x10)
 3. Após cada dia, inclua **dicas personalizadas** sobre postura, alimentação, hidratação, descanso, ou variações.
 4. Finalize com uma seção de **orientações gerais** que incluam aquecimento, descanso entre treinos, sono e hidratação — tudo baseado em recomendações da ACSM e OMS.
-5. Não use asteriscos no pdf. Apenas textos em negrito.
+
 Use linguagem clara, encorajadora e profissional. Evite exageros e foque em segurança, consistência e adaptação progressiva.
 """
 
@@ -87,7 +87,7 @@ def gerar_pdf(nome: str, texto: str, treino: list[dict]) -> bytes:
     # Cabeçalho
     pdf.set_font('Arial', 'B', 16)
     pdf.set_text_color(46, 134, 222)
-    pdf.cell(0, 10, 'Plano de Treino Personalizado de Jack', ln=True, align='C')
+    pdf.cell(0, 10, 'Plano de Treino Personalizado', ln=True, align='C')
     pdf.ln(4)
 
     # Nome do usuário
