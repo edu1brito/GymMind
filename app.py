@@ -1,4 +1,5 @@
 import streamlit as st
+import base64
 from treino_generator import gerar_treino
 from pdf_generator import gerar_pdf
 
