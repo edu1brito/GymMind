@@ -9,9 +9,9 @@ from fpdf import FPDF
 # Regex que captura emojis, variation selectors e zero-width joiners
 CLEAN_PATTERN = re.compile(
     r'('
-    r'[\U00010000-\U0010FFFF]|'   # emojis e símbolos fora do BMP
-    r'[\uFE00-\uFE0F]|'           # variation selectors
-    r'[\u200D]'                   # zero-width joiner
+      r'[\U00010000-\U0010FFFF]|'   # emojis e símbolos fora do BMP
+      r'[\uFE00-\uFE0F]|'           # variation selectors
+      r'[\u200D]'                   # zero-width joiner
     r')',
     flags=re.UNICODE
 )
@@ -69,7 +69,7 @@ def limpar_texto(texto: str) -> str:
 
 def gerar_pdf(nome: str, texto: str) -> bytes:
     """
-    Gera um PDF A4 com plano de treino, sem usar fontes Unicode externas.
+    Gera um PDF A4 com plano de treino, estilizado em vermelho e preto.
     """
     texto_limpo = limpar_texto(texto)
     linhas = [l.strip() for l in texto_limpo.splitlines()]
@@ -80,52 +80,59 @@ def gerar_pdf(nome: str, texto: str) -> bytes:
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
 
-    # Cabeçalho
-    pdf.set_font('Arial', 'B', 18)
-    pdf.set_text_color(30, 144, 255)
-    pdf.cell(0, 12, 'Plano de Treino Personalizado', ln=True, align='C')
-    pdf.ln(6)
+    # Título (vermelho, negrito, grande)
+    pdf.set_font('Arial', 'B', 20)
+    pdf.set_text_color(255, 0, 0)
+    pdf.cell(0, 15, 'Plano de Treino Personalizado', ln=True, align='C')
+    pdf.ln(5)
 
-    # Nome do usuário
+    # Subtítulo (nome do usuário) preto e negrito
     pdf.set_font('Arial', 'B', 14)
     pdf.set_text_color(0, 0, 0)
-    pdf.cell(0, 8, f'Nome: {nome}', ln=True)
-    pdf.ln(6)
+    pdf.cell(0, 10, f'Nome: {nome}', ln=True)
+    pdf.ln(8)
 
     # Corpo do plano
     for linha in linhas:
         if not linha:
-            pdf.ln(3)
+            pdf.ln(4)
             continue
 
+        # Dia da semana / seção (ex: "Segunda - Peito e Tríceps")
         if '-' in linha and not linha[0].isdigit():
+            pdf.set_fill_color(240, 240, 240)      # fundo cinza claro
             pdf.set_font('Arial', 'B', 13)
-            pdf.set_text_color(46, 134, 222)
-            pdf.multi_cell(0, 8, linha)
-            pdf.ln(1)
+            pdf.set_text_color(255, 0, 0)          # vermelho
+            pdf.cell(0, 8, linha, ln=True, fill=True)
+            pdf.ln(2)
 
+        # Exercícios numerados (começam com dígito)
         elif linha[0].isdigit():
             pdf.set_font('Arial', '', 11)
             pdf.set_text_color(0, 0, 0)
-            pdf.multi_cell(0, 6, '    ' + linha)  # indentação leve
+            pdf.cell(8)                            # indentação leve
+            pdf.multi_cell(0, 6, linha)
             pdf.ln(1)
 
+        # Dicas (linhas que começam com "-")
         elif linha.startswith('-'):
             pdf.set_font('Arial', 'I', 10)
-            pdf.set_text_color(80, 80, 80)
-            pdf.multi_cell(0, 5, '      ' + linha.strip())
-            pdf.ln(1)
-
-        else:
-            pdf.set_font('Arial', 'I', 10)
-            pdf.set_text_color(80, 80, 80)
+            pdf.set_text_color(100, 100, 100)      # cinza escuro
+            pdf.cell(12)
             pdf.multi_cell(0, 5, linha)
             pdf.ln(1)
 
-    # Rodapé
+        # Texto geral (orientações finais)
+        else:
+            pdf.set_font('Arial', 'I', 10)
+            pdf.set_text_color(80, 80, 80)
+            pdf.multi_cell(0, 6, linha)
+            pdf.ln(1)
+
+    # Rodapé (cinza médio, itálico)
     pdf.set_y(-20)
     pdf.set_font('Arial', 'I', 9)
-    pdf.set_text_color(150, 150, 150)
+    pdf.set_text_color(120, 120, 120)
     pdf.cell(0, 5, 'Gerado por GymMind IA', align='C')
 
     buffer = io.BytesIO()
