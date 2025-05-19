@@ -15,7 +15,8 @@ def gerar_pdf(nome: str, texto: str) -> bytes:
     """
     # Limpa Markdown e asteriscos
 
-
+    texto_limpo = texto.replace('*', '').replace('–', '-').replace('—', '-')
+    lines = [line.strip() for line in texto_limpo.splitlines()]
 
     lines = [line.strip() for line in texto_limpo.splitlines()]
 
