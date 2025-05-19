@@ -20,7 +20,7 @@ def gerar_treino(dados: dict) -> tuple[str, list[dict]]:
     prompt = f"""
 Você é um personal trainer experiente e atualizado com as diretrizes da ACSM (American College of Sports Medicine) e da OMS (Organização Mundial da Saúde).
 
-Com base nos dados abaixo, elabore um **plano de treino completo e seguro**, alinhado com boas práticas científicas:
+Com base nos dados abaixo, elabore um plano de treino completo e seguro, alinhado com boas práticas científicas:
 
 - Nome: {dados['nome']}
 - Idade: {dados['idade']} anos
@@ -32,12 +32,12 @@ Com base nos dados abaixo, elabore um **plano de treino completo e seguro**, ali
 - Equipamentos disponíveis: {dados['equipamentos']}
 - Restrições ou lesões: {dados['restricoes']}
 
-**Requisitos do plano**:
+Requisitos do plano:
 1. Separe o plano por dia da semana (ex: “Segunda – Peito e Tríceps”).
 2. Para cada dia, liste os exercícios **numerados** com o formato:  
    - Exercício – Séries x Repetições (ex: Supino reto – 4x10)
 3. Após cada dia, inclua **dicas personalizadas** sobre postura, alimentação, hidratação, descanso, ou variações.
-4. Finalize com uma seção de **orientações gerais** que incluam aquecimento, descanso entre treinos, sono e hidratação — tudo baseado em recomendações da ACSM e OMS.
+4. Finalize com uma seção de *orientações gerais* que incluam aquecimento, descanso entre treinos, sono e hidratação — tudo baseado em recomendações da ACSM e OMS.
 
 Use linguagem clara, encorajadora e profissional. Evite exageros e foque em segurança, consistência e adaptação progressiva.
 """
