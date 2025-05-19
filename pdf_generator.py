@@ -25,7 +25,7 @@ def gerar_treino(dados: dict) -> tuple[str, list[dict]]:
     prompt = (
         "Você é um personal trainer cientificamente embasado.\n"
         f"{REFERENCIAS_CIENTIFICAS}\n"
-        "Baseie-se nessas diretrizes e nos dados abaixo para montar um plano completo: \n"
+        "Baseie-se nessas diretrizes e nos dados abaixo para montar um plano completo:\n"
         f"- Nome: {dados['nome']}\n"
         f"- Idade: {dados['idade']} anos\n"
         f"- Peso: {dados['peso_kg']} kg\n"
@@ -36,10 +36,10 @@ def gerar_treino(dados: dict) -> tuple[str, list[dict]]:
         f"- Equipamentos: {dados['equipamentos']}\n"
         f"- Restrições: {dados['restricoes']}\n"
         "Formato desejado:\n"
-        "1) Separe por dia (ex: 'Segunda – Peito e Tríceps').\n"
-        "2) Liste numerado: 'Exercício – Séries x Repetições'.\n"
-        "3) Após cada dia, inclua dicas (postura, descanso, alimentação).\n"
-        "4) Finalize com orientações de aquecimento, sono e hidratação."
+        "Dia da semana – Treino (ex: "Segunda – Peito e Tríceps").\n"
+        "Em cada dia, listagem numerada: Exercício – Séries x Repetições.\n"
+        "Após listagem, inclua seção 'Dicas personalizadas:' com bullets.\n"
+        "Finalize com orientações gerais."
     )
 
     response = client.chat.completions.create(
@@ -47,80 +47,83 @@ def gerar_treino(dados: dict) -> tuple[str, list[dict]]:
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7
     )
-    texto = response.choices[0].message.content
-
-    # Extrai lista de exercícios para possível tabela
-    treino = []
-    for linha in texto.splitlines():
-        linha = linha.strip()
-        if not linha or not linha[0].isdigit():
-            continue
-        partes = linha.split('.', 1)
-        if len(partes) != 2:
-            continue
-        resto = partes[1].strip().replace('–', '-').replace('—', '-')
-        if '-' not in resto:
-            continue
-        ex, sr = resto.split('-', 1)
-        sr = sr.replace(' ', '').lower()
-        if 'x' not in sr:
-            continue
-        try:
-            s, r = sr.split('x')
-            treino.append({
-                'exercicio': ex.strip(),
-                'series': int(s),
-                'repeticoes': int(r)
-            })
-        except ValueError:
-            continue
-    return texto, treino
+    return response.choices[0].message.content, []
 
 
 def gerar_pdf(nome: str, texto: str) -> bytes:
     """
-    Gera um PDF estilizado sem sintaxe Markdown e com rodapé.
-
-    - Título e nome em fontes diferenciadas.
-    - Texto line-wrapped sem asteriscos.
-    - Rodapé discreto no fim da página.
+    Gera um PDF estilizado sem sintaxe Markdown, com formatação de títulos,
+    itens numerados e dicas em itálico.
     """
-    # Remove possíveis asteriscos e marcações
-    texto_limpo = texto.replace('*', '')
+    # Limpa markdown e asteriscos
+    texto_limpo = texto.replace('*', '').replace('**', '')
+    lines = texto_limpo.splitlines()
 
     pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
 
     # Cabeçalho
     pdf.set_font('Arial', 'B', 18)
-    pdf.set_text_color(46, 134, 222)
-    pdf.cell(0, 10, 'Plano de Treino Personalizado', ln=True, align='C')
+    pdf.set_text_color(30, 144, 255)
+    pdf.cell(0, 12, 'Plano de Treino Personalizado', ln=True, align='C')
     pdf.ln(4)
 
-    # Nome do usuário
+    # Nome
     pdf.set_font('Arial', 'B', 14)
-    pdf.set_text_color(51, 51, 51)
-    pdf.cell(0, 8, f'Nome: {nome}', ln=True)
-    pdf.ln(6)
-
-    # Corpo do texto
-    pdf.set_font('Arial', '', 11)
     pdf.set_text_color(0, 0, 0)
-    pdf.multi_cell(0, 6, texto_limpo)
+    pdf.cell(0, 8, f'Nome: {nome}', ln=True)
+    pdf.ln(4)
 
-    # Rodapé fixo
-    pdf.set_y(-25)
+    # Corpo
+    for line in lines:
+        text = line.strip()
+        if not text:
+            pdf.ln(2)
+            continue
+        # Cabeçalhos de dia (contêm '–' e não iniciam com número)
+        if '–' in text and not text[0].isdigit():
+            pdf.set_font('Arial', 'B', 13)
+            pdf.set_text_color(46, 134, 222)
+            pdf.cell(0, 8, text, ln=True)
+            pdf.ln(1)
+        # Dicas personalizadas
+        elif text.lower().startswith('dicas'):
+            pdf.ln(2)
+            pdf.set_font('Arial', 'B', 12)
+            pdf.set_text_color(34, 34, 34)
+            pdf.cell(0, 7, 'Dicas Personalizadas:', ln=True)
+            pdf.ln(1)
+        # Itens numerados
+        elif text[0].isdigit():
+            pdf.set_font('Arial', '', 11)
+            pdf.set_text_color(0, 0, 0)
+            pdf.cell(5)
+            pdf.multi_cell(0, 6, text)
+        # Bullets de dicas
+        elif text.startswith('-'):
+            pdf.set_font('Arial', 'I', 10)
+            pdf.set_text_color(80, 80, 80)
+            pdf.cell(10)
+            pdf.multi_cell(0, 5, f'• {text[1:].strip()}')
+        # Orientações gerais
+        else:
+            pdf.ln(1)
+            pdf.set_font('Arial', 'I', 10)
+            pdf.set_text_color(80, 80, 80)
+            pdf.multi_cell(0, 5, text)
+
+    # Rodapé
+    pdf.set_y(-20)
     pdf.set_font('Arial', 'I', 9)
-    pdf.set_text_color(136, 136, 136)
-    pdf.cell(0, 6, 'Gerado por GymMind IA', ln=True, align='C')
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(0, 5, 'Gerado por GymMind IA', align='C')
 
-    buffer = io.BytesIO()
-    pdf.output(buffer)
-    return buffer.getvalue()
+    buf = io.BytesIO()
+    pdf.output(buf)
+    return buf.getvalue()
 
 
 if __name__ == '__main__':
-    # Exemplo rápido de uso
     dados_exemplo = {
         'nome': 'Teste',
         'idade': 25,
