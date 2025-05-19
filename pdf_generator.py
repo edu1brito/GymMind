@@ -93,37 +93,35 @@ def gerar_pdf(nome: str, texto: str) -> bytes:
     pdf.ln(6)
 
     # Corpo do plano
-    for linha in linhas:
-        if not linha:
-            pdf.ln(2)
-            continue
+for linha in linhas:
+    if not linha:
+        pdf.ln(3)
+        continue
 
-        # Dia da semana ou seção (ex: "Segunda - Peito e Tríceps")
-        if '-' in linha and not linha[0].isdigit():
-            pdf.set_font('Arial', 'B', 13)
-            pdf.set_text_color(46, 134, 222)
-            pdf.multi_cell(180, 8, linha)
-            pdf.ln(1)
+    if '-' in linha and not linha[0].isdigit():
+        pdf.set_font('Arial', 'B', 13)
+        pdf.set_text_color(46, 134, 222)
+        pdf.multi_cell(0, 8, linha)
+        pdf.ln(1)
 
-        # Exercícios numerados (começam com dígito)
-        elif linha and linha[0].isdigit():
-            pdf.set_font('Arial', '', 11)
-            pdf.set_text_color(0, 0, 0)
-            pdf.cell(5)
-            pdf.multi_cell(180, 6, linha)
+    elif linha[0].isdigit():
+        pdf.set_font('Arial', '', 11)
+        pdf.set_text_color(0, 0, 0)
+        pdf.multi_cell(0, 6, '    ' + linha)  # indentação leve
+        pdf.ln(1)
 
-        # Dicas (linhas que começam com "-")
-        elif linha.startswith('-'):
-            pdf.set_font('Arial', 'I', 10)
-            pdf.set_text_color(80, 80, 80)
-            pdf.cell(10)
-            pdf.multi_cell(170, 5, linha)
+    elif linha.startswith('-'):
+        pdf.set_font('Arial', 'I', 10)
+        pdf.set_text_color(80, 80, 80)
+        pdf.multi_cell(0, 5, '      ' + linha.strip())
+        pdf.ln(1)
 
-        # Texto geral (orientações finais)
-        else:
-            pdf.set_font('Arial', 'I', 10)
-            pdf.set_text_color(80, 80, 80)
-            pdf.multi_cell(180, 5, linha)
+    else:
+        pdf.set_font('Arial', 'I', 10)
+        pdf.set_text_color(80, 80, 80)
+        pdf.multi_cell(0, 5, linha)
+        pdf.ln(1)
+
 
     # Rodapé
     pdf.set_y(-20)
