@@ -13,8 +13,8 @@ def gerar_pdf(nome: str, texto: str) -> bytes:
     - Rodapé com crédito
     """
     # Limpa Markdown e asteriscos
-   import re
-texto_limpo = re.sub(r'\*+', '', texto)
+texto_limpo = texto.replace('*', '')
+
 
     lines = [line.strip() for line in texto_limpo.splitlines()]
 
